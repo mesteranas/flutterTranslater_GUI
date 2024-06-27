@@ -13,9 +13,9 @@ class main (qt.QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle(app.name + _("version : ") + str(app.version))
+        self.files=[]
         layout=qt.QVBoxLayout()
-        self.path=guiTools.QReadOnlyTextEdit()
-        layout.addWidget(qt.QLabel(_("file path")))
+        self.path=qt.QListWidget()
         layout.addWidget(self.path)
         self.browse=guiTools.QPushButton(_("Browse"))
         self.browse.clicked.connect(self.on_browse)
@@ -94,12 +94,17 @@ class main (qt.QMainWindow):
 
     def on_browse(self):
         file=qt.QFileDialog(self)
+        file.setFileMode(file.FileMode.ExistingFiles)
         if file.exec()==file.DialogCode.Accepted:
-            self.path.setText(file.selectedFiles()[0])
+            self.path.addItems(file.selectedFiles())
+            self.files.extend(file.selectedFiles())
     def on_go(self):
-        with open(self.path.toPlainText(),"r",encoding="utf-8") as file:
-            text=file.read()
-        list=self.xFind(text,self.funName.text()+'("','")')
+        list={}
+        for file in self.files:
+            with open(file,"r",encoding="utf-8") as file:
+                text=file.read()
+            for key,value in self.xFind(text,self.funName.text()+'("','")').items():
+                list[key]=value
         gui.HandleTranslation(self,list).exec()
 
 App=qt.QApplication([])
